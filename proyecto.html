@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Profesional de Verificación</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #eef4ff;
+      --primary: #0f4c81;
+      --primary-2: #0b74de;
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #172033;
+      --muted: #667085;
+      --card: rgba(255, 255, 255, 0.92);
+      --border: #d9e2f2;
+      --shadow: 0 20px 50px rgba(15, 76, 129, 0.16);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(11, 116, 222, 0.22), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.18), transparent 30%),
+        linear-gradient(135deg, #eef4ff 0%, #f8fbff 55%, #e8f5ff 100%);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(7, 37, 68, 0.92);
+      color: white;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .topbar {
+      max-width: 1180px;
+      margin: auto;
+      padding: 16px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary-2), #22c55e);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+      font-size: 22px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .brand small {
+      color: #c9ddf7;
+      display: block;
+      margin-top: 4px;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-btn,
+    button {
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .nav-btn {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .nav-btn:hover,
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 30px 22px 60px;
+    }
+
+    .view,
+    .module {
+      animation: fadeIn 0.35s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .hero {
+      min-height: calc(100vh - 110px);
+      display: grid;
+      place-items: center;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid rgba(217, 226, 242, 0.92);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px;
+    }
+
+    .login-card {
+      width: min(620px, 100%);
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #e8f2ff;
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    h2,
+    h3 {
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+      color: #102a43;
+    }
+
+    h3 {
+      color: #102a43;
+      font-size: 24px;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      color: #344054;
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      font: inherit;
+      color: var(--text);
+      background: #fbfdff;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--primary-2);
+      box-shadow: 0 0 0 4px rgba(11, 116, 222, 0.12);
+      background: white;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .col-12 { grid-column: span 12; }
+    .col-8 { grid-column: span 8; }
+    .col-6 { grid-column: span 6; }
+    .col-4 { grid-column: span 4; }
+    .col-3 { grid-column: span 3; }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 22px;
+    }
+
+    .btn-primary,
+    .btn-success,
+    .btn-outline,
+    .btn-danger,
+    .btn-soft {
+      padding: 13px 16px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: white;
+      box-shadow: 0 12px 24px rgba(11, 116, 222, 0.22);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #16a34a, var(--accent));
+      color: white;
+      box-shadow: 0 12px 24px rgba(34, 197, 94, 0.22);
+    }
+
+    .btn-outline {
+      background: white;
+      color: var(--primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-soft {
+      background: #edf6ff;
+      color: var(--primary);
+    }
+
+    .btn-danger {
+      background: #fff1f2;
+      color: #be123c;
+      border: 1px solid #fecdd3;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .dashboard-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+
+    .dashboard-head p {
+      margin: 8px 0 0;
+    }
+
+    .progress-card {
+      min-width: 260px;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .progress-track {
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e5eaf3;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary-2), var(--accent));
+      transition: width 0.35s ease;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 12px 30px rgba(15, 76, 129, 0.1);
+      cursor: pointer;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 45px rgba(15, 76, 129, 0.18);
+    }
+
+    .card-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: #eef6ff;
+      font-size: 26px;
+      margin-bottom: 18px;
+    }
+
+    .card h3 {
+      font-size: 19px;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .stat {
+      background: #ffffffcc;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 20px;
+      color: #102a43;
+      word-break: break-word;
+    }
+
+    .module {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .module-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .module-head p {
+      margin: 6px 0 0;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .helper {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      background: white;
+      border: 1px solid var(--border);
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eff6ff;
+      color: #17446d;
+      font-size: 13px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td input,
+    td textarea,
+    td select {
+      margin: 0;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .photo-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 105px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #eef2f7;
+      display: block;
+    }
+
+    .photo-card strong {
+      display: block;
+      font-size: 12px;
+      margin-top: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .photo-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .alert {
+      display: none;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin: 0 0 18px;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert.ok {
+      background: #ecfdf3;
+      color: #087443;
+      border-color: #abefc6;
+    }
+
+    .alert.error {
+      background: #fff1f3;
+      color: #b42318;
+      border-color: #fecdd6;
+    }
+
+    .required::after {
+      content: " *";
+      color: var(--danger);
+    }
+
+    .footer-note {
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 980px) {
+      .cards,
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .dashboard-head,
+      .module-head,
+      .topbar {
+        flex-direction: column;
+      }
+
+      nav {
+        justify-content: flex-start;
+      }
+
+      .col-8,
+      .col-6,
+      .col-4,
+      .col-3 {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 20px 14px 42px;
+      }
+
+      .panel,
+      .module {
+        padding: 18px;
+      }
+
+      .cards,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      nav .nav-btn {
+        width: 100%;
+      }
+
+      .actions button {
+        width: 100%;
+      }
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        border-bottom: 1px solid var(--border);
+        padding: 12px;
+      }
+
+      td {
+        border: 0;
+        padding: 8px 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 6px;
+      }
+    }
+
+    @media print {
+      header,
+      .actions,
+      .nav-btn,
+      .btn-primary,
+      .btn-success,
+      .btn-outline,
+      .btn-soft,
+      .btn-danger,
+      input[type="file"] {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+      }
+
+      main {
+        padding: 0;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .panel,
+      .module,
+      .stat,
+      .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-icon">✓</div>
+        <div>
+          <h1>Panel de Verificación</h1>
+          <small>Registro, evidencia y exportación profesional</small>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-btn" onclick="volverMenu()">Inicio</button>
+        <button class="nav-btn" onclick="mostrarModulo('verificacion')">Verificación</button>
+        <button class="nav-btn" onclick="mostrarModulo('ficha')">Ficha Técnica</button>
+        <button class="nav-btn" onclick="mostrarModulo('fotos')">Evidencia</button>
+        <button class="nav-btn" onclick="mostrarModulo('antesDespues')">Antes / Después</button>
+        <button class="nav-btn" onclick="descargarExcel()">Excel</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="inicio" class="view hero">
+      <div class="panel login-card">
+        <div class="badge">🧾 Sistema de control de proyecto</div>
+        <h2>Bienvenido al panel de verificación</h2>
+        <p>Ingrese el nombre de la persona que ejecutará el proyecto para iniciar el registro.</p>
+        <div id="loginAlert" class="alert"></div>
+        <div class="form-group" style="text-align:left; margin-top: 24px;">
+          <label for="ejecutor" class="required">Nombre completo del ejecutor</label>
+          <input type="text" id="ejecutor" placeholder="Ejemplo: Juan Pérez" autocomplete="name" />
+          <div class="helper">Este dato aparecerá en el resumen y en el archivo Excel.</div>
+        </div>
+        <button class="btn-primary btn-full" onclick="continuar()">Continuar al panel</button>
+      </div>
+    </section>
+
+    <section id="menu" class="view hidden">
+      <div class="dashboard-head">
+        <div>
+          <div class="badge">Panel principal</div>
+          <h2>Gestión de verificación</h2>
+          <p>Complete los módulos necesarios y descargue el reporte final en Excel.</p>
+        </div>
+        <div class="panel progress-card">
+          <div class="progress-row">
+            <span>Avance del registro</span>
+            <strong id="progressText">0%</strong>
+          </div>
+          <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span>Ejecutor</span>
+          <strong id="statEjecutor">—</strong>
+        </div>
+        <div class="stat">
+          <span>Fecha</span>
+          <strong id="statFecha">—</strong>
+        </div>
+        <div class="stat">
+          <span>Materiales</span>
+          <strong id="statMateriales">0</strong>
+        </div>
+        <div class="stat">
+          <span>Fotografías</span>
+          <strong id="statFotos">0</strong>
+        </div>
+      </div>
+
+      <div id="globalAlert" class="alert"></div>
+
+      <div class="cards">
+        <article class="card" onclick="mostrarModulo('verificacion')">
+          <div>
+            <div class="card-icon">📋</div>
+            <h3>Verificación</h3>
+            <p>Datos generales: fecha, responsable, solicitante, lugar y descripción.</p>
+          </div>
+        </article>
+        <article class="card" onclick="mostrarModulo('ficha')">
+          <div>
+            <div class="card-icon">🛠️</div>
+            <h3>Ficha Técnica</h3>
+            <p>Registro dinámico de materiales, cantidades, unidades y observaciones.</p>
+          </div>
+        </article>
+        <article class="card" onclick="mostrarModulo('fotos')">
+          <div>
+            <div class="card-icon">📸</div>
+            <h3>Evidencia</h3>
+            <p>Subida de fotografías con vista previa inmediata en pantalla.</p>
+          </div>
+        </article>
+        <article class="card" onclick="mostrarModulo('antesDespues')">
+          <div>
+            <div class="card-icon">🔄</div>
+            <h3>Antes / Después</h3>
+            <p>Comparación visual del estado inicial y final del proyecto.</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="actions">
+        <button class="btn-success" onclick="descargarExcel()">⬇ Descargar Excel</button>
+        <button class="btn-outline" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+        <button class="btn-danger" onclick="limpiarTodo()">🗑️ Limpiar formulario</button>
+      </div>
+      <p class="footer-note">El formulario se guarda automáticamente en este navegador. Por seguridad, las imágenes seleccionadas solo se mantienen durante la sesión actual.</p>
+    </section>
+
+    <section id="verificacion" class="module hidden">
+      <div class="module-head">
+        <div>
+          <h3>📋 Verificación del proyecto</h3>
+          <p>Complete la información principal del proyecto.</p>
+        </div>
+        <button class="btn-outline" onclick="volverMenu()">⬅ Regresar</button>
+      </div>
+
+      <div id="verificacionAlert" class="alert"></div>
+
+      <div class="grid">
+        <div class="form-group col-4">
+          <label for="fecha" class="required">Fecha de verificación</label>
+          <input type="date" id="fecha" />
+        </div>
+        <div class="form-group col-4">
+          <label for="responsable" class="required">Responsable</label>
+          <input type="text" id="responsable" placeholder="Nombre del responsable" />
+        </div>
+        <div class="form-group col-4">
+          <label for="solicitante" class="required">Nombre del solicitante</label>
+          <input type="text" id="solicitante" placeholder="Nombre del solicitante" />
+        </div>
+        <div class="form-group col-4">
+          <label for="tipoProyecto">Tipo de proyecto</label>
+          <select id="tipoProyecto">
+            <option value="Municipal">Municipal</option>
+            <option value="Social">Social</option>
+            <option value="Comunitario">Comunitario</option>
+            <option value="Infraestructura">Infraestructura</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group col-8">
+          <label for="lugar" class="required">Lugar</label>
+          <input type="text" id="lugar" placeholder="Aldea, zona, municipio o ubicación" />
+        </div>
+        <div class="form-group col-12">
+          <label for="descripcion" class="required">Descripción del proyecto</label>
+          <textarea id="descripcion" placeholder="Explique brevemente el proyecto, objetivo y necesidad detectada"></textarea>
+        </div>
+        <div class="form-group col-8">
+          <label for="materialesHerramientas">Materiales y herramientas generales</label>
+          <textarea id="materialesHerramientas" placeholder="Ejemplo: cemento, arena, pintura, brochas, palas, carretilla..."></textarea>
+        </div>
+        <div class="form-group col-4">
+          <label for="personal">¿Requiere personal operativo?</label>
+          <select id="personal">
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+            <option value="Por confirmar">Por confirmar</option>
+          </select>
+        </div>
+        <div class="form-group col-12">
+          <label for="observaciones">Observaciones</label>
+          <textarea id="observaciones" placeholder="Agregue notas importantes, riesgos o pendientes"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-success" onclick="guardarYVolver('verificacion')">Guardar y volver</button>
+        <button class="btn-outline" onclick="volverMenu()">Cancelar</button>
+      </div>
+    </section>
+
+    <section id="ficha" class="module hidden">
+      <div class="module-head">
+        <div>
+          <h3>🛠️ Ficha técnica</h3>
+          <p>Agregue los materiales o recursos necesarios. Puede crear varias filas.</p>
+        </div>
+        <button class="btn-outline" onclick="volverMenu()">⬅ Regresar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 120px;">Cantidad</th>
+              <th style="width: 140px;">Unidad</th>
+              <th>Descripción</th>
+              <th>Observación</th>
+              <th style="width: 90px;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="materialesBody"></tbody>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button class="btn-soft" onclick="agregarMaterial()">➕ Agregar material</button>
+        <button class="btn-success" onclick="guardarYVolver('ficha')">Guardar y volver</button>
+        <button class="btn-outline" onclick="volverMenu()">Cancelar</button>
+      </div>
+    </section>
+
+    <section id="fotos" class="module hidden">
+      <div class="module-head">
+        <div>
+          <h3>📸 Evidencia fotográfica</h3>
+          <p>Seleccione una o varias fotografías de la visita o verificación.</p>
+        </div>
+        <button class="btn-outline" onclick="volverMenu()">⬅ Regresar</button>
+      </div>
+
+      <div class="form-group">
+        <label for="fotosEvidencia">Subir fotografías de evidencia</label>
+        <input type="file" id="fotosEvidencia" accept="image/*" multiple />
+        <div class="helper">Se mostrará una vista previa. En Excel se exportan los nombres de los archivos.</div>
+      </div>
+      <div id="previewEvidencia" class="preview-grid"></div>
+
+      <div class="actions">
+        <button class="btn-success" onclick="guardarYVolver('fotos')">Guardar y volver</button>
+        <button class="btn-outline" onclick="volverMenu()">Cancelar</button>
+      </div>
+    </section>
+
+    <section id="antesDespues" class="module hidden">
+      <div class="module-head">
+        <div>
+          <h3>🔄 Registro antes y después</h3>
+          <p>Suba imágenes del estado inicial y del proyecto finalizado.</p>
+        </div>
+        <button class="btn-outline" onclick="volverMenu()">⬅ Regresar</button>
+      </div>
+
+      <div class="grid">
+        <div class="form-group col-6">
+          <label for="fotoAntes">Fotografías del antes</label>
+          <input type="file" id="fotoAntes" accept="image/*" multiple />
+          <div id="previewAntes" class="preview-grid"></div>
+        </div>
+        <div class="form-group col-6">
+          <label for="fotoDespues">Fotografías del proyecto finalizado</label>
+          <input type="file" id="fotoDespues" accept="image/*" multiple />
+          <div id="previewDespues" class="preview-grid"></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn-success" onclick="guardarYVolver('antesDespues')">Guardar y volver</button>
+        <button class="btn-outline" onclick="volverMenu()">Cancelar</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "panel_verificacion_profesional_v1";
+    const vistas = ["inicio", "menu"];
+    const modulos = ["verificacion", "ficha", "fotos", "antesDespues"];
+
+    let estado = {
+      ejecutor: "",
+      fotos: {
+        evidencia: [],
+        antes: [],
+        despues: []
+      }
+    };
+
+    const camposFormulario = [
+      "ejecutor",
+      "fecha",
+      "responsable",
+      "solicitante",
+      "tipoProyecto",
+      "lugar",
+      "descripcion",
+      "materialesHerramientas",
+      "personal",
+      "observaciones"
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      cargarGuardado();
+      configurarEventos();
+      configurarFechaActual();
+      if (obtenerMateriales().length === 0) agregarMaterial();
+      actualizarDashboard();
+    });
+
+    function configurarEventos() {
+      camposFormulario.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+          elemento.addEventListener("input", () => {
+            guardarLocal();
+            actualizarDashboard();
+          });
+          elemento.addEventListener("change", () => {
+            guardarLocal();
+            actualizarDashboard();
+          });
+        }
+      });
+
+      document.getElementById("fotosEvidencia").addEventListener("change", event => manejarFotos(event, "evidencia", "previewEvidencia"));
+      document.getElementById("fotoAntes").addEventListener("change", event => manejarFotos(event, "antes", "previewAntes"));
+      document.getElementById("fotoDespues").addEventListener("change", event => manejarFotos(event, "despues", "previewDespues"));
+    }
+
+    function configurarFechaActual() {
+      const fecha = document.getElementById("fecha");
+      if (!fecha.value) {
+        fecha.value = new Date().toISOString().split("T")[0];
+        guardarLocal();
+      }
+    }
+
+    function continuar() {
+      const nombre = document.getElementById("ejecutor").value.trim();
+      if (!nombre) {
+        mostrarAlerta("loginAlert", "Por favor ingrese el nombre del ejecutor para continuar.", "error");
+        document.getElementById("ejecutor").focus();
+        return;
+      }
+      estado.ejecutor = nombre;
+      guardarLocal();
+      mostrarVista("menu");
+      actualizarDashboard();
+    }
+
+    function mostrarVista(id) {
+      vistas.forEach(vista => document.getElementById(vista).classList.add("hidden"));
+      modulos.forEach(modulo => document.getElementById(modulo).classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function mostrarModulo(id) {
+      const nombre = document.getElementById("ejecutor").value.trim();
+      if (!nombre) {
+        mostrarVista("inicio");
+        document.getElementById("ejecutor").focus();
+        return;
+      }
+      estado.ejecutor = nombre;
+      guardarLocal();
+      mostrarVista(id);
+      actualizarDashboard();
+    }
+
+    function volverMenu() {
+      const nombre = document.getElementById("ejecutor").value.trim();
+      guardarLocal();
+      actualizarDashboard();
+      if (nombre) mostrarVista("menu");
+      else mostrarVista("inicio");
+    }
+
+    function guardarYVolver(modulo) {
+      guardarLocal();
+      actualizarDashboard();
+      if (modulo === "verificacion") {
+        const faltantes = validarVerificacion();
+        if (faltantes.length) {
+          mostrarAlerta("verificacionAlert", "Faltan datos importantes: " + faltantes.join(", ") + ".", "error");
+          return;
+        }
+      }
+      mostrarAlerta("globalAlert", "Datos guardados correctamente.", "ok");
+      mostrarVista("menu");
+    }
+
+    function validarVerificacion() {
+      const requeridos = [
+        ["fecha", "fecha"],
+        ["responsable", "responsable"],
+        ["solicitante", "solicitante"],
+        ["lugar", "lugar"],
+        ["descripcion", "descripción"]
+      ];
+      return requeridos
+        .filter(([id]) => !document.getElementById(id).value.trim())
+        .map(([, nombre]) => nombre);
+    }
+
+    function agregarMaterial(material = {}) {
+      const tbody = document.getElementById("materialesBody");
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td data-label="Cantidad"><input type="number" min="0" step="1" class="mat-cantidad" placeholder="0" value="${material.cantidad || ""}"></td>
+        <td data-label="Unidad">
+          <select class="mat-unidad">
+            ${crearOpcionesUnidad(material.unidad)}
+          </select>
+        </td>
+        <td data-label="Descripción"><textarea class="mat-descripcion" placeholder="Descripción del material o recurso">${material.descripcion || ""}</textarea></td>
+        <td data-label="Observación"><textarea class="mat-observacion" placeholder="Observación opcional">${material.observacion || ""}</textarea></td>
+        <td data-label="Acción"><button class="btn-danger" onclick="eliminarMaterial(this)">Eliminar</button></td>
+      `;
+      tbody.appendChild(tr);
+      tr.querySelectorAll("input, textarea, select").forEach(elemento => {
+        elemento.addEventListener("input", () => {
+          guardarLocal();
+          actualizarDashboard();
+        });
+        elemento.addEventListener("change", () => {
+          guardarLocal();
+          actualizarDashboard();
+        });
+      });
+      guardarLocal();
+      actualizarDashboard();
+    }
+
+    function crearOpcionesUnidad(seleccion = "Unidad") {
+      const unidades = ["Unidad", "Metro", "Metro cuadrado", "Metro cúbico", "Libra", "Quintal", "Galón", "Litro", "Bolsa", "Caja", "Servicio", "Otro"];
+      return unidades.map(unidad => `<option value="${unidad}" ${unidad === seleccion ? "selected" : ""}>${unidad}</option>`).join("");
+    }
+
+    function eliminarMaterial(boton) {
+      const filas = document.querySelectorAll("#materialesBody tr");
+      if (filas.length === 1) {
+        const fila = filas[0];
+        fila.querySelectorAll("input, textarea").forEach(elemento => elemento.value = "");
+        fila.querySelector("select").value = "Unidad";
+      } else {
+        boton.closest("tr").remove();
+      }
+      guardarLocal();
+      actualizarDashboard();
+    }
+
+    function obtenerMateriales() {
+      return Array.from(document.querySelectorAll("#materialesBody tr")).map(fila => ({
+        cantidad: fila.querySelector(".mat-cantidad")?.value || "",
+        unidad: fila.querySelector(".mat-unidad")?.value || "",
+        descripcion: fila.querySelector(".mat-descripcion")?.value.trim() || "",
+        observacion: fila.querySelector(".mat-observacion")?.value.trim() || ""
+      })).filter(material => material.cantidad || material.descripcion || material.observacion);
+    }
+
+    function manejarFotos(event, tipo, previewId) {
+      const archivos = Array.from(event.target.files || []);
+      estado.fotos[tipo] = archivos.map(file => ({
+        nombre: file.name,
+        tipo: file.type,
+        tamano: file.size,
+        url: URL.createObjectURL(file)
+      }));
+      renderizarPreview(previewId, estado.fotos[tipo]);
+      actualizarDashboard();
+    }
+
+    function renderizarPreview(previewId, archivos) {
+      const contenedor = document.getElementById(previewId);
+      contenedor.innerHTML = "";
+      if (!archivos.length) return;
+      archivos.forEach(file => {
+        const card = document.createElement("div");
+        card.className = "photo-card";
+        const kb = Math.round((file.tamano || 0) / 1024);
+        card.innerHTML = `
+          <img src="${file.url}" alt="${file.nombre}">
+          <strong title="${file.nombre}">${file.nombre}</strong>
+          <span>${kb} KB</span>
+        `;
+        contenedor.appendChild(card);
+      });
+    }
+
+    function recopilarDatos() {
+      const datos = {};
+      camposFormulario.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) datos[id] = elemento.value.trim();
+      });
+      datos.materiales = obtenerMateriales();
+      datos.fotos = estado.fotos;
+      return datos;
+    }
+
+    function guardarLocal() {
+      const datos = recopilarDatos();
+      const copiaSegura = {
+        ...datos,
+        fotos: { evidencia: [], antes: [], despues: [] }
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(copiaSegura));
+    }
+
+    function cargarGuardado() {
+      const guardado = localStorage.getItem(STORAGE_KEY);
+      if (!guardado) return;
+      try {
+        const datos = JSON.parse(guardado);
+        camposFormulario.forEach(id => {
+          const elemento = document.getElementById(id);
+          if (elemento && datos[id]) elemento.value = datos[id];
+        });
+        if (Array.isArray(datos.materiales) && datos.materiales.length) {
+          document.getElementById("materialesBody").innerHTML = "";
+          datos.materiales.forEach(material => agregarMaterial(material));
+        }
+      } catch (error) {
+        console.error("No se pudo cargar el guardado local", error);
+      }
+    }
+
+    function actualizarDashboard() {
+      const datos = recopilarDatos();
+      const totalFotos = estado.fotos.evidencia.length + estado.fotos.antes.length + estado.fotos.despues.length;
+      document.getElementById("statEjecutor").textContent = datos.ejecutor || "—";
+      document.getElementById("statFecha").textContent = datos.fecha || "—";
+      document.getElementById("statMateriales").textContent = datos.materiales.length;
+      document.getElementById("statFotos").textContent = totalFotos;
+
+      const elementosAvance = [
+        datos.ejecutor,
+        datos.fecha,
+        datos.responsable,
+        datos.solicitante,
+        datos.lugar,
+        datos.descripcion,
+        datos.materiales.length > 0 ? "ok" : "",
+        totalFotos > 0 ? "ok" : ""
+      ];
+      const completados = elementosAvance.filter(Boolean).length;
+      const porcentaje = Math.round((completados / elementosAvance.length) * 100);
+      document.getElementById("progressText").textContent = porcentaje + "%";
+      document.getElementById("progressBar").style.width = porcentaje + "%";
+    }
+
+    function descargarExcel() {
+      const datos = recopilarDatos();
+      if (!datos.ejecutor) {
+        mostrarVista("inicio");
+        mostrarAlerta("loginAlert", "Debe ingresar el nombre del ejecutor antes de descargar.", "error");
+        return;
+      }
+
+      if (typeof XLSX === "undefined") {
+        alert("No se pudo cargar la librería para Excel. Revise su conexión a internet e inténtelo de nuevo.");
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      const resumen = [
+        ["Campo", "Valor"],
+        ["Ejecutor", datos.ejecutor],
+        ["Fecha de verificación", datos.fecha],
+        ["Responsable", datos.responsable],
+        ["Solicitante", datos.solicitante],
+        ["Tipo de proyecto", datos.tipoProyecto],
+        ["Lugar", datos.lugar],
+        ["Personal operativo", datos.personal],
+        ["Total de materiales", datos.materiales.length],
+        ["Fotos de evidencia", estado.fotos.evidencia.length],
+        ["Fotos antes", estado.fotos.antes.length],
+        ["Fotos después", estado.fotos.despues.length]
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumen), "Resumen");
+
+      const verificacion = [
+        ["Descripción del proyecto", datos.descripcion],
+        ["Materiales y herramientas generales", datos.materialesHerramientas],
+        ["Observaciones", datos.observaciones]
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(verificacion), "Verificacion");
+
+      const materiales = datos.materiales.length
+        ? datos.materiales.map((m, index) => ({
+          No: index + 1,
+          Cantidad: m.cantidad,
+          Unidad: m.unidad,
+          Descripcion: m.descripcion,
+          Observacion: m.observacion
+        }))
+        : [{ No: "", Cantidad: "", Unidad: "", Descripcion: "Sin materiales registrados", Observacion: "" }];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(materiales), "Ficha Tecnica");
+
+      const fotos = [
+        ...estado.fotos.evidencia.map((f, i) => ({ Categoria: "Evidencia", No: i + 1, Archivo: f.nombre, Tamano_KB: Math.round(f.tamano / 1024) })),
+        ...estado.fotos.antes.map((f, i) => ({ Categoria: "Antes", No: i + 1, Archivo: f.nombre, Tamano_KB: Math.round(f.tamano / 1024) })),
+        ...estado.fotos.despues.map((f, i) => ({ Categoria: "Despues", No: i + 1, Archivo: f.nombre, Tamano_KB: Math.round(f.tamano / 1024) }))
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fotos.length ? fotos : [{ Categoria: "", No: "", Archivo: "Sin fotografías seleccionadas", Tamano_KB: "" }]), "Fotografias");
+
+      const nombreArchivo = "Reporte_Verificacion_" + limpiarNombreArchivo(datos.ejecutor) + "_" + (datos.fecha || new Date().toISOString().split("T")[0]) + ".xlsx";
+      XLSX.writeFile(wb, nombreArchivo);
+      mostrarAlerta("globalAlert", "Excel generado correctamente.", "ok");
+    }
+
+    function limpiarNombreArchivo(texto) {
+      return texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9_-]/g, "_")
+        .replace(/_+/g, "_")
+        .slice(0, 40);
+    }
+
+    function limpiarTodo() {
+      const confirmar = confirm("¿Desea borrar todos los datos guardados del formulario?");
+      if (!confirmar) return;
+      localStorage.removeItem(STORAGE_KEY);
+      camposFormulario.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (!elemento) return;
+        if (elemento.tagName === "SELECT") elemento.selectedIndex = 0;
+        else elemento.value = "";
+      });
+      estado.fotos = { evidencia: [], antes: [], despues: [] };
+      ["previewEvidencia", "previewAntes", "previewDespues"].forEach(id => document.getElementById(id).innerHTML = "");
+      document.getElementById("materialesBody").innerHTML = "";
+      agregarMaterial();
+      configurarFechaActual();
+      actualizarDashboard();
+      mostrarVista("inicio");
+    }
+
+    function mostrarAlerta(id, mensaje, tipo = "ok") {
+      const alerta = document.getElementById(id);
+      if (!alerta) return;
+      alerta.className = "alert show " + tipo;
+      alerta.textContent = mensaje;
+      setTimeout(() => alerta.classList.remove("show"), 3600);
+    }
+  </script>
+</body>
+</html>
